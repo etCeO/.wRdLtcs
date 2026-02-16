@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Word Frequency Counter</title>
+    <style>
+        body {
+            font-family: "Georgia", "Times New Roman", serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+            line-height: 1.6;
+            background-color: #f4f1ec;
+            background-image:
+                repeating-linear-gradient(
+                    0deg,
+                    rgba(0, 0, 0, 0.015),
+                    rgba(0, 0, 0, 0.015) 1px,
+                    transparent 1px,
+                    transparent 24px
+                );
+        }
+        h1, h2 {
+            text-align: center;
+        }
+
+        input[type="file"] {
+            display: block;
+            margin: 20px auto;
+        }
+
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 18px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .feedback {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 2px solid #ddd;
+            text-align: center;
+        }
+
+        .feedback-form {
+            max-width: 500px;
+            margin: 30px auto 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .feedback-form input,
+        .feedback-form textarea {
+            font-family: inherit;
+            padding: 12px;
+            font-size: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #resultsTable tbody tr:nth-child(even) {
+            background-color: #f0ebe2;
+        }
+
+        .page {
+            background-color: #fffdf8;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }        
+    </style>
+</head>
+
+<body>
+<div class="page">
+
+<h1>Word Frequency Counter</h1>
+<p style="text-align:center;">
+    Upload a <strong>.txt file</strong> to see word counts and tabular data.
+</p>
+
+<input type="file" id="fileInput" accept=".txt">
+<button onclick="processFile()">Analyze Text</button>
+
+<h2>Results</h2>
+
+<table id="resultsTable" style="display:none; width:100%; border-collapse: collapse;">
+    <thead>
+        <tr>
+            <th style="text-align:left; border-bottom:2px solid #333;">Word</th>
+            <th style="text-align:right; border-bottom:2px solid #333;">Count</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<button id="downloadBtn" style="display:none;" onclick="downloadResults()">
+    Download counts.txt
+</button>
+
+<div class="feedback">
+    <h2>Feedback</h2>
+    <p>Have feedback, questions, or suggestions? Send me a message below.</p>
+
+    <!-- FORM SPREE INTEGRATION -->
+    <form 
+        class="feedback-form"
+        action="https://formspree.io/f/mzdarvvn"
+        method="POST"
+    >
+        <input 
+            type="hidden" 
+            name="_subject" 
+            value="New Word Counter Feedback Submission"
+        >
+
+        <input 
+            type="hidden" 
+            name="_redirect" 
+            value="thank-you.html"
+        >
+
+        <input
+            type="text"
+            name="name"
+            placeholder="Your name"
+            required
+        >
+
+        <textarea
+            name="message"
+            placeholder="Your message"
+            rows="5"
+            required
+        ></textarea>
+
+        <button type="submit">Send Feedback</button>
+    </form>
+</div>
+
+</div>
+
+<script>
+    let finalOutputText = "";
+
+    function processFile() {
+        const fileInput = document.getElementById("fileInput");
+        const table = document.getElementById("resultsTable");
+        const tbody = table.querySelector("tbody");
+
+        if (!fileInput.files.length) {
+            alert("Please upload a .txt file first.");
+            return;
+        }
+
+        tbody.innerHTML = "";
+
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function(event) {
+            const text = event.target.result;
+            const wordCounts = buildDictionary(text);
+            const sorted = sortDictionary(wordCounts);
+
+            sorted.forEach(([word, count]) => {
+                const row = document.createElement("tr");
+
+                const wordCell = document.createElement("td");
+                wordCell.textContent = word;
+
+                const countCell = document.createElement("td");
+                countCell.textContent = count;
+                countCell.style.textAlign = "right";
+
+                row.appendChild(wordCell);
+                row.appendChild(countCell);
+                tbody.appendChild(row);
+            });
+
+            table.style.display = "table";
+
+            finalOutputText = sorted
+                .map(([word, count]) => `${word}: ${count}`)
+                .join("\n");
+
+            document.getElementById("downloadBtn").style.display = "block";
+        };
+
+        reader.readAsText(file);
+    }
+
+    function buildDictionary(text) {
+        text = text.toLowerCase();
+        const words = text.split(/\s+/);
+        const wordCount = {};
+
+        for (let word of words) {
+            word = word.replace(/[^a-z]/g, "");
+            if (word.length > 0) {
+                wordCount[word] = (wordCount[word] || 0) + 1;
+            }
+        }
+        return wordCount;
+    }
+
+    function sortDictionary(dict) {
+        return Object.entries(dict)
+            .sort((a, b) => b[1] - a[1]);
+    }
+
+    function downloadResults() {
+        const blob = new Blob([finalOutputText], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "counts.txt";
+        a.click();
+
+        URL.revokeObjectURL(url);
+    }
+</script>
+
+</body>
+</html>
