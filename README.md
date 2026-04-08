@@ -27,3 +27,5 @@ Ethan LLM Works is a self-directed, independent passion of mine I pursue in free
 4. “Format the output as a table (word + count).”
 5. "Modify the background to reflect an English literature theme."
 6. "Ensure all fonts are consistent with the webpage."
+7. "Add a bar chart below results that shows the top 5 common words with counts sorted in alphabetical order, avoiding pronouns, common words (the, and, is, a, etc.), non-descriptive placeholders (let, get, etc.), and only focusing on nouns and key action verbs.
+8. "Now limit the output in the table only to the first 100 rows."
