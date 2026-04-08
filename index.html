@@ -100,6 +100,8 @@
     <tbody></tbody>
 </table>
 
+<canvas id="topWordsChart" style="display:none; margin-top:30px;"></canvas>
+
 <button id="downloadBtn" style="display:none;" onclick="downloadResults()">
     Download counts.txt
 </button>
@@ -108,7 +110,6 @@
     <h2>Feedback</h2>
     <p>Have feedback, questions, or suggestions? Send me a message below.</p>
 
-    <!-- FORM SPREE INTEGRATION -->
     <form 
         class="feedback-form"
         action="https://formspree.io/f/mzdarvvn"
@@ -146,6 +147,7 @@
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     let finalOutputText = "";
 
@@ -169,7 +171,7 @@
             const wordCounts = buildDictionary(text);
             const sorted = sortDictionary(wordCounts);
 
-            sorted.forEach(([word, count]) => {
+            sorted.slice(0,100).forEach(([word, count]) => {
                 const row = document.createElement("tr");
 
                 const wordCell = document.createElement("td");
@@ -184,6 +186,18 @@
                 tbody.appendChild(row);
             });
 
+            // message for remaining words
+            if (sorted.length > 100) {
+                const noteRow = document.createElement("tr");
+                const noteCell = document.createElement("td");
+                noteCell.colSpan = 2;
+                noteCell.style.textAlign = "center";
+                noteCell.style.fontStyle = "italic";
+                noteCell.textContent = "Remaining words are available in the download file.";
+                noteRow.appendChild(noteCell);
+                tbody.appendChild(noteRow);
+            }
+
             table.style.display = "table";
 
             finalOutputText = sorted
@@ -191,6 +205,8 @@
                 .join("\n");
 
             document.getElementById("downloadBtn").style.display = "block";
+
+            renderChart(wordCounts);
         };
 
         reader.readAsText(file);
@@ -213,6 +229,59 @@
     function sortDictionary(dict) {
         return Object.entries(dict)
             .sort((a, b) => b[1] - a[1]);
+    }
+
+    function renderChart(wordCounts) {
+        const stopwords = new Set([
+            "the","and","is","a","an","of","to","in","it","that","for","on","with","as","at","by","this","from","or",
+            "be","are","was","were","but","not","have","has","had",
+            "you","i","we","they","he","she","them","his","her","our","your","their","its",
+            "so","if","then","than","too","very","can","will","just","get","let","do","does","did",
+
+            // added simple/common words
+            "all","out","what","when","where","why","how","which","who","whom",
+            "dont","doesnt","didnt","cant","couldnt","shouldnt","wouldnt","wont",
+            "im","youre","theyre","were","ive","youve","weve","theyll",
+            "again","once","here","there","now","then",
+            "also","even","still","much","many","more","most","some","any","each","every",
+            "own","same","other","another",
+            "because","while","during","before","after","above","below","up","down","over","under",
+            "off","into","about","between","through","against","around","among"
+        ]);
+        const filtered = Object.entries(wordCounts)
+            .filter(([word]) => !stopwords.has(word) && word.length > 2);
+
+        const top5 = filtered
+            .sort((a,b) => b[1] - a[1])
+            .slice(0,5)
+            .sort((a,b) => a[0].localeCompare(b[0]));
+
+        const labels = top5.map(([w]) => w);
+        const data = top5.map(([,c]) => c);
+
+        const canvas = document.getElementById("topWordsChart");
+        canvas.style.display = "block";
+
+        if (window.chartInstance) {
+            window.chartInstance.destroy();
+        }
+
+        window.chartInstance = new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Top Words',
+                    data: data
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
     }
 
     function downloadResults() {
