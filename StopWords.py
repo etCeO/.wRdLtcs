@@ -1,6 +1,5 @@
 
 # Ethan E. Lopez
-# 002425516
 # etlopez@chapman.edu
 # CPSC 230 - Section 2
 # Program Assignment 5
